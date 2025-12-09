@@ -12,7 +12,7 @@ const options = {
       description: 'API documentation for Qodebyte Academy',
     },
     servers: [
-      { url: 'http://localhost:5001' }
+      { url: 'https://academy.qodebyte.com' }
     ],
     components: {
       securitySchemes: {

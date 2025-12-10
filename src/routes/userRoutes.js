@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/usersAuthentication");
 const { upload } = require("../utils/uploads");
+const { rateLimitMiddleware } = require("../middleware/rateLimiter");
 
 /**
  * @swagger
@@ -10,7 +11,7 @@ const { upload } = require("../utils/uploads");
  *   name: Users
  *   description: User authentication and profile management
  *
- * /api/auth/users/register:
+ * /auth/users/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Users]
@@ -36,6 +37,22 @@ const { upload } = require("../utils/uploads");
  *                 type: string
  *               state:
  *                 type: string
+ *               dob:
+ *                 type: string
+ *                 format: date
+ *               address:
+ *                 type: string
+ *               learning_mode:
+ *                 type: string
+ *                 enum: [online, offline]
+ *               ReferralSourceOptions:
+ *                 type: string
+ *               interested_course_ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
+ *                 description: List of course IDs the user is interested in (nullable)
  *     responses:
  *       201:
  *         description: OTP sent. Please verify email.
@@ -46,7 +63,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Internal server error
  *
- * /api/auth/users/login:
+ * /auth/users/login:
  *   post:
  *     summary: Login a user (sends OTP)
  *     tags: [Users]
@@ -76,7 +93,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/google-login:
+ * /auth/users/google-login:
  *   post:
  *     summary: Login or register user via Google
  *     tags: [Users]
@@ -101,7 +118,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/verify:
+ * /auth/users/verify:
  *   post:
  *     summary: Verify OTP for register/login/reset
  *     tags: [Users]
@@ -137,7 +154,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/resend-otp:
+ * /auth/users/resend-otp:
  *   post:
  *     summary: Resend OTP to user
  *     tags: [Users]
@@ -163,7 +180,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/forgot-password:
+ * /auth/users/forgot-password:
  *   post:
  *     summary: Send OTP for password reset
  *     tags: [Users]
@@ -188,7 +205,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/reset-password:
+ * /auth/users/reset-password:
  *   post:
  *     summary: Reset user password
  *     tags: [Users]
@@ -214,7 +231,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/logout:
+ * /auth/users/logout:
  *   post:
  *     summary: Logout user and blacklist token
  *     tags: [Users]
@@ -228,7 +245,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/profile/:user_id:
+ * /auth/users/profile/:user_id:
  *   get:
  *     summary: Get user by ID
  *     tags: [Users]
@@ -248,7 +265,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/profile:
+ * /auth/users/profile:
  *   put:
  *     summary: Update user profile
  *     tags: [Users]
@@ -276,6 +293,8 @@ const { upload } = require("../utils/uploads");
  *               profilePic:
  *                 type: string
  *                 format: binary
+ *               address:
+ *                 type: string
  *     responses:
  *       200:
  *         description: User profile updated successfully
@@ -284,7 +303,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/change-password:
+ * /auth/users/change-password:
  *   put:
  *     summary: Change user password
  *     tags: [Users]
@@ -314,7 +333,7 @@ const { upload } = require("../utils/uploads");
  *       500:
  *         description: Server error
  *
- * /api/auth/users/delete/:user_id:
+ * /auth/users/delete/:user_id:
  *   delete:
  *     summary: Delete user by ID
  *     tags: [Users]
@@ -345,12 +364,12 @@ router.post("/reset-password", userController.resetPassword);
 router.post("/logout", authenticateToken, userController.logout);
 
 // router.get("/", userController.getUsers);
-router.get("/profile/:user_id", authenticateToken, userController.getUserById);
+router.get("/profile/:user_id", authenticateToken, rateLimitMiddleware, userController.getUserById);
 
-router.put("/profile", authenticateToken, upload.single("profilePic"), userController.updateUserProfile);
-router.put("/change-password", authenticateToken, userController.changeUserPassword);
+router.put("/profile", authenticateToken,  upload.single("profilePic"), rateLimitMiddleware, userController.updateUserProfile);
+router.put("/change-password", authenticateToken, rateLimitMiddleware, userController.changeUserPassword);
 
-router.delete("/delete/:user_id", authenticateToken, userController.deleteUser);
+router.delete("/delete/:user_id", authenticateToken, rateLimitMiddleware, userController.deleteUser);
 
 
 module.exports = router;

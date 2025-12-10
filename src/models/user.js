@@ -30,6 +30,10 @@ User.init({
         unique: true,
         allowNull: true,
     },
+    dob: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    },
     isVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
@@ -42,14 +46,34 @@ User.init({
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  address: {
+     type: DataTypes.STRING,
+    allowNull: true,
+  },
   state: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  learning_mode: {
+     type: DataTypes.ENUM('online', 'offline'),
+      allowNull: false,
+      defaultValue: 'offline',
   },
   country: {
     type: DataTypes.STRING,
     allowNull: true,
   },
+
+  ReferralSourceOptions: {
+     type: DataTypes.STRING,
+    allowNull: true,
+  },
+
+  interested_course_ids: {
+    type: DataTypes.ARRAY(DataTypes.UUID),
+    allowNull: true,
+  },
+
   last_login: {
     type: DataTypes.DATE,
     allowNull: true,

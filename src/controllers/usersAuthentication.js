@@ -6,7 +6,7 @@ const {generateToken, generateTokenMainToken } = require('../utils/jwt');
 const {generateOTP} = require('../utils/otpGenerator');
 const { sendOtpEmail, sendNewUserEmail } = require('../services/emailServices');
 const bcrypt = require('bcryptjs');
-const { User, OTP, BlacklistedToken, sequelize } = require('../models');
+const { User, OTP, BlacklistedToken, sequelize, Course } = require('../models');
 const fetchHelper = require('../utils/fetchHelper');
 
 function rateLimit(key, max = 5, windowMs = 60 * 1000) {
@@ -47,11 +47,16 @@ exports.register = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
-    const { full_name, email, password, is_social_media, country, state } = req.body;
+    const { full_name, email, password, dob, is_social_media, address, country, state, learning_mode, ReferralSourceOptions, interested_course_ids } = req.body;
 
     if (!full_name || !email || (!is_social_media && !password)) {
       await t.rollback();
       return res.status(400).json({ message: "Missing required fields." });
+    }
+
+      if (interested_course_ids && !Array.isArray(interested_course_ids)) {
+      await t.rollback();
+      return res.status(400).json({ message: "interested_course_ids must be an array of UUIDs." });
     }
 
     let user = await User.findOne({ where: { email }, transaction: t });
@@ -71,11 +76,16 @@ exports.register = async (req, res) => {
         {
           full_name,
           email,
+          dob,
+          address,
           state,
           country,
+          learning_mode,
+          ReferralSourceOptions,
           password: hashedPassword,
           isVerified: false,
           is_social_media: !!is_social_media,
+          interested_course_ids: interested_course_ids || null,
         },
         { transaction: t }
       );
@@ -427,7 +437,16 @@ exports.getUserById = async (req, res) => {
       if (!user) {
           return res.status(404).json({ message: 'User not found.' });
       }
-      return res.status(200).json({ user });
+
+      let interested_courses = [];
+      if (user.interested_course_ids && Array.isArray(user.interested_course_ids) && user.interested_course_ids.length) {
+        interested_courses = await Course.findAll({
+          where: { course_id: user.interested_course_ids },
+          attributes: ['course_id', 'title', 'price']
+        });
+      }
+
+      return res.status(200).json({ user, interested_courses });
   } catch (err) {
       console.error('Get user by ID error:', err);
       return res.status(500).json({ message: 'Server error.', error: err });
@@ -438,7 +457,7 @@ exports.updateUserProfile = async (req, res) => {
     const t = await sequelize.transaction();
   try {
     const user_id = req.user.user_id;
-    const { full_name, phone, state, country, removeProfilePic } = req.body;
+    const { full_name, phone, state, country, removeProfilePic, email, address} = req.body;
     const user = await User.findOne({ where: { user_id }, transaction: t });
     if (!user) {
       await t.rollback();
@@ -463,6 +482,7 @@ exports.updateUserProfile = async (req, res) => {
     }
 
     if (full_name) user.full_name = full_name;
+    if (address) user.address= address
     if (country) user.country = country;
     if (state) user.state = state
     if (phone) user.phone = phone;
@@ -490,7 +510,7 @@ exports.updateUserProfile = async (req, res) => {
     console.error('Update user profile error:', error);
     return res.status(500).json({ message: 'Server error.', error });
   }
-}
+};
 
 exports.changeUserPassword = async (req, res) => {
   const t = await sequelize.transaction();

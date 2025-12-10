@@ -1,0 +1,34 @@
+const { DataTypes, Model } = require('sequelize');
+const sequelize = require('../config/db');
+
+class Project extends Model {}
+
+Project.init(
+  {
+    project_id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+
+    module_id: {
+      type: DataTypes.UUID,
+      references: { model: 'course_modules', key: 'module_id' },
+      onDelete: 'CASCADE',
+      allowNull: false,
+    },
+
+    instructions: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+  },
+  {
+    sequelize,
+    modelName: 'Project',
+    tableName: 'projects',
+    timestamps: true,
+  }
+);
+
+module.exports = Project;

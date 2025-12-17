@@ -1,4 +1,6 @@
-const {Course, CourseModule, CourseLesson, StudentCourse } = require("../models");
+const { Op } = require("sequelize");
+const {Course, CourseModule, CourseLesson, StudentCourse, Payment } = require("../models");
+const ensureEnrolled = require("../utils/enrolledStudent");
 
 exports.getAllCourses = async (req, res) => {
   try {
@@ -135,12 +137,26 @@ exports.getEnrolledCourse = async (req, res) => {
   }
 };
 
-async function ensureEnrolled(student_id, course_id) {
-  const enrollment = await StudentCourse.findOne({
-    where: { student_id, course_id },
+async function calculateUnlockedModules(student_id, course_id) {
+ 
+  const payments = await Payment.findAll({
+    where: {
+      student_id,
+      course_id,
+      status: { [Op.in]: ['completed', 'part_payment'] }
+    }
   });
-  return !!enrollment; 
-};
+
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const course = await Course.findByPk(course_id);
+  if (!course) return 0;
+
+  const totalModules = await CourseModule.count({ where: { course_id } });
+  const costPerModule = Number(course.price) / totalModules;
+
+  return Math.floor(totalPaid / costPerModule);
+}
 
 exports.getEnrolledCourseModules = async (req, res) => {
   try {
@@ -148,18 +164,20 @@ exports.getEnrolledCourseModules = async (req, res) => {
     const course_id = req.query.course_id || req.params.course_id;
 
     if (!student_id) return res.status(401).json({ message: 'Unauthorized' });
-    if (!course_id) return res.status(400).json({ message: 'course_id is required (query or param)' });
+    if (!course_id) return res.status(400).json({ message: 'course_id is required' });
 
     const enrolled = await ensureEnrolled(student_id, course_id);
     if (!enrolled) return res.status(403).json({ message: 'Not enrolled in this course' });
 
+    const unlocked = await calculateUnlockedModules(student_id, course_id);
+
     const modules = await CourseModule.findAll({
-      where: { course_id },
+      where: { course_id, module_order: { [Op.lte]: unlocked } },
       include: [{ model: CourseLesson, as: 'lessons', attributes: ['lesson_id', 'title', 'lesson_order'] }],
       order: [['module_order', 'ASC'], [{ model: CourseLesson, as: 'lessons' }, 'lesson_order', 'ASC']],
     });
 
-    return res.status(200).json({ modules });
+    return res.status(200).json({ modules, unlocked_modules: unlocked });
   } catch (err) {
     console.error('Get enrolled course modules error:', err);
     return res.status(500).json({ message: 'Server error', error: err.message });
@@ -172,17 +190,23 @@ exports.getEnrolledModuleById = async (req, res) => {
     const module_id = req.query.module_id || req.params.module_id;
 
     if (!student_id) return res.status(401).json({ message: 'Unauthorized' });
-    if (!module_id) return res.status(400).json({ message: 'module_id is required (query or param)' });
+    if (!module_id) return res.status(400).json({ message: 'module_id is required' });
 
     const module = await CourseModule.findByPk(module_id, {
-      include: [{ model: Course, as: 'course', attributes: ['course_id', 'title'] }],
+      include: [{ model: Course, as: 'course', attributes: ['course_id', 'title', 'price'] }],
     });
     if (!module) return res.status(404).json({ message: 'Module not found' });
 
     const enrolled = await ensureEnrolled(student_id, module.course_id);
     if (!enrolled) return res.status(403).json({ message: 'Not enrolled in this course' });
 
-    return res.status(200).json({ module });
+    const unlocked = await calculateUnlockedModules(student_id, module.course_id);
+
+    if (module.module_order > unlocked) {
+      return res.status(403).json({ message: 'Module is locked. Unlock more modules by completing payments.' });
+    }
+
+    return res.status(200).json({ module, unlocked_modules: unlocked });
   } catch (err) {
     console.error('Get enrolled module error:', err);
     return res.status(500).json({ message: 'Server error', error: err.message });

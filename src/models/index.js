@@ -2,6 +2,7 @@ const sequelize = require("../config/db");
 const Assignment = require("./assignment");
 const AssignmentSubmission = require("./assignment_submissions");
 const BlacklistedToken = require("./blacklist");
+const Certificate = require("./certificate");
 const Course = require("./course");
 const CourseLesson = require("./courseLessons");
 const CourseModule = require("./courseModules");
@@ -14,6 +15,7 @@ const ProjectSubmission = require("./project_submission");
 const Quiz = require("./quiz");
 const QuizResult = require("./quiz_results");
 const StudentCourse = require("./student_course");
+const StudentModule = require("./student_module");
 const User = require("./user");
 
 
@@ -218,6 +220,35 @@ Course.belongsToMany(User, {
   as: 'students',
 });
 
+User.hasMany(StudentModule, {
+  foreignKey: 'student_id',
+  as: 'student_modules',
+  onDelete: 'CASCADE',
+});
+StudentModule.belongsTo(User, {
+  foreignKey: 'student_id',
+  as: 'student',
+});
+
+CourseModule.hasMany(StudentModule, {
+  foreignKey: 'module_id',
+  as: 'student_modules',
+  onDelete: 'CASCADE',
+});
+StudentModule.belongsTo(CourseModule, {
+  foreignKey: 'module_id',
+  as: 'module',
+});
+
+User.hasMany(Certificate, { foreignKey: "student_id", as: "certificates" });
+Certificate.belongsTo(User, { foreignKey: "student_id", as: "student" });
+
+Course.hasMany(Certificate, { foreignKey: "course_id", as: "certificates" });
+Certificate.belongsTo(Course, { foreignKey: "course_id", as: "course" });
+
+CourseModule.hasMany(Certificate, { foreignKey: "module_id", as: "certificates" });
+Certificate.belongsTo(CourseModule, { foreignKey: "module_id", as: "module" });
+
 module.exports = {
     sequelize,
     User,
@@ -236,4 +267,6 @@ module.exports = {
     Progress,
     Notification,
     StudentCourse,
+    StudentModule,
+    Certificate
 }

@@ -8,6 +8,7 @@ const { sendOtpEmail, sendNewUserEmail } = require('../services/emailServices');
 const bcrypt = require('bcryptjs');
 const { User, OTP, BlacklistedToken, sequelize, Course } = require('../models');
 const fetchHelper = require('../utils/fetchHelper');
+const { sendNotification } = require('./notificationController');
 
 function rateLimit(key, max = 5, windowMs = 60 * 1000) {
   const now = Date.now();
@@ -370,7 +371,8 @@ exports.verifyOtp = async (req, res) => {
        
       await user.update({ isVerified: true }, { transaction: t });
       token = generateToken({ user_id: user.user_id, email: user.email, verified: true });
-          await sendNewUserEmail(user.email, user.full_name);
+      await sendNewUserEmail(user.email, user.full_name);
+
     } else if (purpose === 'login') {
        
       token = generateTokenMainToken({ user_id: user.user_id, email: user.email });
@@ -387,6 +389,21 @@ exports.verifyOtp = async (req, res) => {
     }
 
     await t.commit();
+    if (purpose === "register") {
+  await sendNotification({
+    student_id: user.user_id,
+    title: "Welcome to Qodebyte Academy 🎉",
+    message: "Your account has been successfully verified. You can now start learning.",
+  });
+}
+
+if (purpose === "login") {
+  await sendNotification({
+    student_id: user.user_id,
+    title: "Login Successful 🔐",
+    message: "You’ve successfully logged into your account.",
+  });
+}
     return res.status(200).json({ message: 'OTP verified.', token  });
   } catch (err) {
     await t.rollback();
@@ -503,7 +520,11 @@ exports.updateUserProfile = async (req, res) => {
     
     await user.save({ transaction: t });
     await t.commit();
-
+    await sendNotification({
+  student_id: user_id,
+  title: "Profile Updated ✏️",
+  message: "Your profile information has been updated successfully.",
+});
     return res.status(200).json({ message: 'User profile updated successfully.', user });
   } catch (error) {
     await t.rollback();
@@ -538,13 +559,18 @@ exports.changeUserPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save({ transaction: t });
     await t.commit();
+    await sendNotification({
+  student_id: user_id,
+  title: "Password Changed 🔒",
+  message: "Your account password was changed successfully. If this wasn’t you, please contact support immediately.",
+});
     return res.status(200).json({ message: 'Password changed successfully.' });
   } catch (error) {
     await t.rollback();
     console.error('Change password error:', error);
     return res.status(500).json({ message: 'Server error.', error });
   }
-}
+};
 
 
 exports.deleteUser = async (req, res) => {

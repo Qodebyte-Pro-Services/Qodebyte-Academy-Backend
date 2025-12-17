@@ -1,5 +1,6 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const { Certificate } = require('./src/models');
 
 
 
@@ -250,11 +251,38 @@ const options = {
             payment_type: { type: 'string', nullable: true },
             payment_status: { type: 'string', enum: ['paid', 'pending', 'part_payment', 'defaulted', 'refunded'], default: 'pending' },
             unlocked_modules: { type: 'integer' },
+            total_modules: {type: 'integer'},
+            paid_amount: { type: 'number', format: 'float' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
-        }
+        },
 
+         StudentModule: {
+          type: 'object',
+          properties: {
+            student_module_id: { type: 'string', format: 'uuid' },
+            student_id: { type: 'string', format: 'uuid' },
+            module_id: { type: 'string', format: 'uuid' },
+            completed: { type: 'boolean', default: false },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          },
+          description: 'Tracks module-level completion for a student'
+        },
+
+        Certificate: {
+          type: 'object',
+          properties: {
+             certificate_id: { type: 'string', format: 'uuid' },
+             student_id: { type: 'string', format: 'uuid' },
+             course_id: { type: 'string', format: 'uuid' },
+            module_id: { type: 'string', format: 'uuid' },
+            certificate_type:  { type: 'string', enum: ['course', 'module']},
+             issued_at:  { type: 'string', format: 'date-time' },
+              file_url: { type: 'string' }
+          }
+        }
    
     },
     },

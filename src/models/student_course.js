@@ -41,6 +41,16 @@ StudentCourse.init(
       allowNull: false,
       defaultValue: 0,
     },
+
+    total_modules: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+
+    paid_amount: {
+  type: DataTypes.DECIMAL(10,2),
+  defaultValue: 0
+},
   },
   {
     sequelize,

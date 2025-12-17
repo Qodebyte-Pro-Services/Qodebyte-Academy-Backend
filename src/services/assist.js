@@ -1,6 +1,6 @@
 const transporter = require('../config/mailer');
 
-
+// Helper function to format status for display
 function formatStatus(status) {
   const statusMap = {
     'completed': 'Completed ✅',
@@ -12,8 +12,8 @@ function formatStatus(status) {
 }
 
 async function sendOtpEmail(to, otp, purpose = 'register') {
+  // (Leave as is - already styled)
   let subject, headline, introMessage, actionMessage;
-
 
   if (purpose === 'login') {
     subject = 'Login Verification – Your OTP Code Inside 🔐';
@@ -23,16 +23,14 @@ async function sendOtpEmail(to, otp, purpose = 'register') {
   } else if (purpose === 'resend') {
     subject = 'Resend OTP – Complete Your Verification ✔️';
     headline = 'Here’s Your New OTP Code';
-    introMessage = 'As requested, we’ve sent you a new OTP. Use it below to complete your verification.';
+    introMessage = 'As requested, we\'ve sent you a new OTP. Use it below to complete your verification.';
     actionMessage = 'This OTP will expire in <b>5 minutes</b>. Please use it before it expires.';
   } else {
-
     subject = 'Complete Your Registration – Verify Your Email 📩';
     headline = 'Email Verification Required';
-    introMessage = 'Thanks for signing up! Use the OTP below to verify your email address and activate your  student account.';
+    introMessage = 'Thanks for signing up! Use the OTP below to verify your email address and activate your student account.';
     actionMessage = 'This OTP will expire in <b>5 minutes</b>. Please use it to complete your registration.';
   }
-
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -51,7 +49,7 @@ async function sendOtpEmail(to, otp, purpose = 'register') {
 
         <p>${actionMessage}</p>
         
-        <p>If you didn’t request this, you can safely ignore this email.</p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
         
         <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
         <p style="font-size: 12px; color: #777; text-align: center;">
@@ -69,7 +67,7 @@ async function sendOtpEmail(to, otp, purpose = 'register') {
     console.error('❌ Error sending OTP email:', err);
     return false;
   }
-};
+}
 
 async function sendNewUserEmail(email, full_name) {
   try {
@@ -95,13 +93,19 @@ async function sendNewUserEmail(email, full_name) {
             <p style="margin: 10px 0;"><span style="color: #718096;">🔐 Password:</span> <em>Use the password you created during registration</em></p>
           </div>
           
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.APP_URL || 'https://qodebyte.com/login'}" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+              Access Your Dashboard →
+            </a>
+          </div>
+          
           <p style="font-size: 14px; color: #718096; line-height: 1.6;">To get started, please login to your account using the email address above. If you have any questions or need assistance, our support team is here to help.</p>
           
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #E2E8F0; text-align: center;">
             <p style="font-size: 12px; color: #A0AEC0;">
               Happy Learning!<br>
               The Qodebyte Academy Team<br>
-              <a href="mailto:info@qodebyte.com" style="color: #667eea;">info@qodebyte.com</a>
+              <a href="mailto:support@qodebyte.com" style="color: #667eea;">support@qodebyte.com</a>
             </p>
           </div>
         </div>
@@ -115,7 +119,7 @@ async function sendNewUserEmail(email, full_name) {
     console.error("❌ sendNewUserEmail error:", err);
     return false;
   }
-};
+}
 
 async function sendPaymentInitEmail(to, course, amount, reference) {
   try {
@@ -173,7 +177,7 @@ async function sendPaymentInitEmail(to, course, amount, reference) {
           </div>
           
           <p style="color: #718096; font-size: 14px; line-height: 1.6; text-align: center;">
-            Need help? Contact our support team at <a href="mailto:info@qodebyte.com" style="color: #4299E1;">info@qodebyte.com</a>
+            Need help? Contact our support team at <a href="mailto:support@qodebyte.com" style="color: #4299E1;">support@qodebyte.com</a>
           </p>
         </div>
       </div>
@@ -187,8 +191,7 @@ async function sendPaymentInitEmail(to, course, amount, reference) {
     console.error("❌ sendPaymentInitEmail error:", error);
     return false;
   }
-};
-
+}
 
 async function sendPaymentVerificationEmail(to, course, status, modulesUnlocked) {
   try {
@@ -254,11 +257,16 @@ async function sendPaymentVerificationEmail(to, course, status, modulesUnlocked)
           </div>
           ` : ''}
           
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${process.env.APP_URL || 'https://qodebyte.com/dashboard'}" style="display: inline-block; background: linear-gradient(135deg, ${statusColor}, #667eea); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+              ${status === 'completed' ? 'Start Learning Now →' : 'View Your Dashboard →'}
+            </a>
+          </div>
           
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
             <p style="color: #718096; font-size: 13px; line-height: 1.5; text-align: center;">
               If you have any questions about your payment or course access, please contact our support team at 
-              <a href="mailto:info@qodebyte.com" style="color: #4299E1; text-decoration: none;">info@qodebyte.com</a>
+              <a href="mailto:support@qodebyte.com" style="color: #4299E1; text-decoration: none;">support@qodebyte.com</a>
             </p>
           </div>
         </div>
@@ -273,8 +281,7 @@ async function sendPaymentVerificationEmail(to, course, status, modulesUnlocked)
     console.error("❌ sendPaymentVerificationEmail error:", error);
     return false;
   }
-};
-
+}
 
 async function sendPaymentDefaultedEmail(to, course, status) {
   try {
@@ -327,6 +334,16 @@ async function sendPaymentDefaultedEmail(to, course, status) {
             </ol>
           </div>
           
+          <div style="text-align: center; margin: 30px 0;">
+            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+              <a href="${process.env.APP_URL || 'https://qodebyte.com/payments'}" style="display: inline-block; background: #F56565; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);">
+                Make Payment Now →
+              </a>
+              <a href="${process.env.APP_URL || 'https://qodebyte.com/support'}" style="display: inline-block; background: #4299E1; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);">
+                Contact Support
+              </a>
+            </div>
+          </div>
           
           <div style="background: #EDF2F7; border-radius: 6px; padding: 16px; margin: 25px 0; text-align: center;">
             <p style="margin: 0; color: #4A5568; font-size: 13px;">
@@ -336,7 +353,8 @@ async function sendPaymentDefaultedEmail(to, course, status) {
           
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
             <p style="color: #718096; font-size: 12px; line-height: 1.5; text-align: center;">
-              Qodebyte Academy Support • <a href="mailto:info@qodebyte.com" style="color: #4299E1;">info@qodebyte.com</a> • 
+              Qodebyte Academy Support • <a href="mailto:support@qodebyte.com" style="color: #4299E1;">support@qodebyte.com</a> • 
+              <a href="${process.env.APP_URL || 'https://qodebyte.com/help'}" style="color: #4299E1; text-decoration: none;">Help Center</a>
             </p>
           </div>
         </div>
@@ -351,8 +369,7 @@ async function sendPaymentDefaultedEmail(to, course, status) {
     console.error("❌ sendPaymentDefaultedEmail error:", error);
     return false;
   }
-};
-
+}
 
 async function sendPaymentReminderEmail(to, course, dueDate) {
   try {
@@ -417,6 +434,11 @@ async function sendPaymentReminderEmail(to, course, dueDate) {
           </div>
           ` : ''}
           
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.APP_URL || 'https://qodebyte.com/payments'}" style="display: inline-block; background: linear-gradient(135deg, ${isUrgent ? '#ED8936' : '#4299E1'}, #667eea); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+              ${isUrgent ? 'Pay Now to Avoid Default →' : 'Make Payment →'}
+            </a>
+          </div>
           
           <div style="background: #EDF2F7; border-radius: 6px; padding: 16px; margin: 25px 0; text-align: center;">
             <p style="margin: 0; color: #4A5568; font-size: 13px;">
@@ -427,7 +449,8 @@ async function sendPaymentReminderEmail(to, course, dueDate) {
           
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #E2E8F0; text-align: center;">
             <p style="color: #718096; font-size: 12px; line-height: 1.5;">
-              Need assistance with payment? Contact us at <a href="mailto:info@qodebyte.com" style="color: #4299E1;">info@qodebyte.com</a><br>
+              Need assistance with payment? Contact us at <a href="mailto:support@qodebyte.com" style="color: #4299E1;">support@qodebyte.com</a><br>
+              <a href="${process.env.APP_URL || 'https://qodebyte.com/faq'}" style="color: #718096; text-decoration: none; font-size: 11px;">View Payment FAQs</a>
             </p>
           </div>
         </div>
@@ -444,6 +467,11 @@ async function sendPaymentReminderEmail(to, course, dueDate) {
   }
 }
 
-
-module.exports = {sendOtpEmail, sendNewUserEmail, sendPaymentInitEmail, sendPaymentVerificationEmail, sendPaymentDefaultedEmail, sendPaymentReminderEmail}
-
+module.exports = {
+  sendOtpEmail,
+  sendNewUserEmail,
+  sendPaymentInitEmail,
+  sendPaymentVerificationEmail,
+  sendPaymentDefaultedEmail,
+  sendPaymentReminderEmail
+};

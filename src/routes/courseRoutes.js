@@ -55,8 +55,8 @@ router.get("/:course_id", rateLimitMiddleware, courseController.getCourseById);
  */
 router.get(
   "/my-course/enrolled",
-  rateLimitMiddleware,
   authenticateToken,
+   rateLimitMiddleware,
   courseController.getEnrolledCourses
 );
 
@@ -90,8 +90,8 @@ router.get(
 
 router.get(
   "/my-course/enrolled/course/:course_id",
-  rateLimitMiddleware,
   authenticateToken,
+    rateLimitMiddleware,
   courseController.getEnrolledCourse
 );
 /**
@@ -124,8 +124,8 @@ router.get(
 
 router.get(
   "/my-course/enrolled/modules/:course_id",
-  rateLimitMiddleware,
   authenticateToken,
+    rateLimitMiddleware,
   courseController.getEnrolledCourseModules
 );
 /**
@@ -160,8 +160,8 @@ router.get(
 
 router.get(
   "/my-course/enrolled/module/:module_id",
-  rateLimitMiddleware,
   authenticateToken,
+    rateLimitMiddleware,
   courseController.getEnrolledModuleById
 );
 
@@ -197,8 +197,8 @@ router.get(
 
 router.get(
   "/my-course/enrolled/module/:module_id/lessons",
-  rateLimitMiddleware,
   authenticateToken,
+    rateLimitMiddleware,
   courseController.getModuleLessons
 );
 /**
@@ -233,8 +233,8 @@ router.get(
 
 router.get(
   "/my-course/enrolled/module/lesson/:lesson_id",
-  rateLimitMiddleware,
   authenticateToken,
+  rateLimitMiddleware,
   courseController.getModuleLessonById
 );
 module.exports = router;
